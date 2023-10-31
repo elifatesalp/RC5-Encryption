@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Metin Dosyası Şifreleme ve Çözme</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // DOSYA OKUMA
+        function readFile(file, callback) {
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                callback(event.target.result);
+            };
+            reader.readAsText(file);
+        }
+        //SİMETRİK ŞİFRELEME
+        var WORD = 0;
+        var w = 32;
+        var r = 12;
+
+        function ROTL(x, y) {
+            return (((x) << (y & (w - 1))) | ((x) >>> (w - (y & (w - 1)))));
+        }
+        function ROTR(x, y) {
+            return (((x) >>> (y & (w - 1))) | ((x) << (w - (y & (w - 1)))));
+        }
+
+        //ŞİFRELEME FONKSİYONLARI
+        function rc5encryptText(text, key) {
+            var encryptedText = "";
+            for (var i = 0; i < text.length; i++) {
+                var charCode = text.charCodeAt(i);
+                var keyCode = key.charCodeAt(i % key.length);
+                var encryptedCharCode = charCode ^ keyCode;
+
+                encryptedText += String.fromCharCode(encryptedCharCode);
+            }
+            return encryptedText;
+        }
+        function rc5encryptedText(text,key){
+            for (i = 1; i <= r; i++) {
+                    A = (ROTL((A ^ B), B) + S[2 * i]) % (2 ** w);
+                    B = (ROTL((A ^ B), A) + S[2 * i + 1]) % (2 ** w);
+                }
+        }
+
+
+        // ŞİFRE ÇÖZME FONKSİYONLARI
+        function rc5decryptedText(text, key) {
+            var keyWords = keyToWords(key);
+            var ct = [];
+            var i, A = pt[0] + S[0], B = pt[1] + S[1];
+            for (i = 1; i <= r; i++) {
+                A = (ROTL((A ^ B), B) + S[2 * i]) % (2 ** w);
+                B = (ROTL((A ^ B), A) + S[2 * i + 1]) % (2 ** w);
+            }
+            ct[0] = A;
+            ct[1] = B;
+            return ct;
+        }
+        function rc5decryptText(text, key) {
+            return ROTR();
+        }
+
+
+        // DOSYA KAYDETME FONKSİYONU
+        function downloadFile(fileName, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', fileName);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        //DOSYA YÜKLEME FONKSİYONU
+
+        function handleFileUpload(event) {
+            var file = event.target.files[0];
+            readFile(file, function (text) {
+                var key = prompt("Lütfen bir anahtar girin:"); // Kullanıcıdan anahtar alınması
+                var encryptedText = rc5encryptText(text, key);
+                var decryptedText = rc5decryptText(text, key);
+                downloadFile("sifreli_dosya.txt", encryptedText);
+                downloadFile("cozulmus_dosya.txt", decryptedText);
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <input type="file" id="fileInput" onchange="handleFileUpload(event)">
+
+</body>
+
+</html>
